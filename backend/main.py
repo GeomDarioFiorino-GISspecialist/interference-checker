@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 import geopandas as gpd
-import secrets, smtplib, base64
+import secrets, smtplib, base64, os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -43,10 +43,8 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 
 # ─── Configurazione email ─────────────────────────────────────
 GMAIL_USER     = "dario98frn@gmail.com"
-import os
-GMAIL_APP_PASS = os.environ.get("GMAIL_APP_PASS", "")   # password app senza spazi
+GMAIL_APP_PASS = os.environ.get("GMAIL_APP_PASS", "")
 NOTIFY_TO      = "dario98frn@gmail.com"
-
 CONTACT_EMAIL  = "dario98frn@gmail.com"
 CONTACT_PHONE  = "+39 389 389 3893"
 COMPANY_NAME   = "DarioGIS"
