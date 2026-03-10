@@ -150,8 +150,11 @@ def send_email(nome, azienda, esito, interferenze, now, pdf_b64=None):
         with urllib.request.urlopen(req, timeout=10) as resp:
             result = json.loads(resp.read())
             print(f"Email inviata per {nome} — {esito} | id: {result.get('id')}")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        print(f"Errore Resend HTTP {e.code}: {body}")
     except Exception as e:
-        print(f"Errore invio email: {e}")
+        print(f"Errore invio email: {type(e).__name__}: {e}")
 
 # ─── Schemi ──────────────────────────────────────────────────
 class CheckRequest(BaseModel):
@@ -185,12 +188,32 @@ def debug_fields(username: str = Depends(verify_credentials)):
 
 @app.get("/debug-email")
 def debug_email(username: str = Depends(verify_credentials)):
-    api_key = os.environ.get("RESEND_API_KEY", "NON TROVATA")
-    send_email("Test", "Test Azienda", "test", [], "test", None)
-    return {
-        "resend_key_trovata": api_key != "NON TROVATA",
-        "resend_key_lunghezza": len(api_key)
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    payload = {
+        "from": "onboarding@resend.dev",
+        "to": [NOTIFY_TO],
+        "subject": "Test verifica interferenze",
+        "text": "Test email dal sistema di verifica interferenze.",
     }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=data,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            return {"successo": True, "resend_response": result}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        return {"errore_codice": e.code, "errore_dettaglio": body}
+    except Exception as e:
+        return {"errore": str(e)}
 
 @app.post("/check-interference")
 def check_interference(req: CheckRequest, username: str = Depends(verify_credentials)):
