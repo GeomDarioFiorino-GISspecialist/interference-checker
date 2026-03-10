@@ -363,8 +363,20 @@
     // Genera PDF
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const lm = 20; const pw = 170; let y = 20;
+    const lm = 20; const pw = 170;
+    const PAGE_H = 297; const MARGIN_BOTTOM = 20; const SAFE_H = PAGE_H - MARGIN_BOTTOM;
 
+    // Helper: nuova pagina se non c'e' spazio
+    let y = 20;
+    function checkPage(needed) {
+      if (y + needed > SAFE_H) { doc.addPage(); y = 20; }
+    }
+    function footer() {
+      doc.setFontSize(7.5); doc.setTextColor(150); doc.setFont("helvetica","italic");
+      doc.text("Documento generato automaticamente. Non sostituisce una verifica tecnica in campo.", 105, PAGE_H - 8, {align:"center"});
+    }
+
+    // ── Intestazione ──
     doc.setFillColor(26,29,39); doc.rect(0,0,210,42,"F");
     doc.setTextColor(255,255,255); doc.setFontSize(15); doc.setFont("helvetica","bold");
     doc.text("CERTIFICATO DI VERIFICA INTERFERENZE", 105, 17, {align:"center"});
@@ -374,12 +386,16 @@
     doc.text(`Generato il ${now}`, 105, 34, {align:"center"});
     y = 52;
 
+    // ── Richiedente ──
+    checkPage(24);
     doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
     doc.text("DATI RICHIEDENTE", lm, y); y += 7;
     doc.setFont("helvetica","normal"); doc.setFontSize(9);
     doc.text(`Nome e cognome: ${nome}`, lm, y); y += 5;
     doc.text(`Azienda / Ente:  ${azienda}`, lm, y); y += 12;
 
+    // ── Esito ──
+    checkPage(18);
     doc.setFontSize(12); doc.setFont("helvetica","bold");
     if (isOk) { doc.setFillColor(5,46,22); doc.setTextColor(74,222,128); }
     else       { doc.setFillColor(45,10,10); doc.setTextColor(248,113,113); }
@@ -387,51 +403,58 @@
     doc.text(isOk ? "✓  NESSUNA INTERFERENZA RILEVATA" : `✗  ${lastResult.interferenze_count} INTERFERENZA/E RILEVATA/E`, 105, y+8.5, {align:"center"});
     y += 18;
 
+    // ── Interferenze ──
     if (!isOk && lastResult.interferenze) {
+      checkPage(14);
       doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
       doc.text("DETTAGLIO INTERFERENZE", lm, y); y += 7;
+
       lastResult.interferenze.forEach((inf,i) => {
-        const cardH = 46;
+        const cardH = 50;
+        checkPage(cardH + 4);
         doc.setFillColor(248,248,252); doc.rect(lm, y, pw, cardH, "F");
         doc.setDrawColor(239,68,68); doc.setLineWidth(0.8); doc.line(lm, y, lm, y+cardH); doc.setLineWidth(0.2);
         doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(220,38,38);
         doc.text(`${i+1}. ${inf.layer} — ${inf.tipo_interferenza}`, lm+5, y+7);
         doc.setTextColor(50,50,50); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
-        doc.text(`ID: ${inf.id}`, lm+5, y+14);
-        doc.text(`Comune (area): ${inf.area_code}`, lm+5, y+20);
-        doc.text(`Specie rete: ${inf.specie_rete}`, lm+5, y+26);
-        doc.text(`Materiale: ${inf.materiale}   |   Diametro: ${inf.diametro}   |   Lunghezza: ${inf.lunghezza} m`, lm+5, y+32);
-        doc.text(`Distanza minima dal tracciato: ${inf.distanza_minima_m} m`, lm+5, y+40);
-        y += cardH + 4;
+        doc.text(`ID: ${inf.id || "N/D"}`, lm+5, y+15);
+        doc.text(`Comune (area): ${inf.area_code || "N/D"}`, lm+5, y+22);
+        doc.text(`Specie rete: ${inf.specie_rete || "N/D"}`, lm+5, y+29);
+        doc.text(`Materiale: ${inf.materiale || "N/D"}   |   Diametro: ${inf.diametro || "N/D"}   |   Lunghezza: ${inf.lunghezza || "N/D"} m`, lm+5, y+36);
+        doc.text(`Distanza minima dal tracciato: ${inf.distanza_minima_m} m`, lm+5, y+44);
+        y += cardH + 5;
       });
+
+      // ── Contatti ──
       if (lastResult.contatti) {
-        y += 2;
-        doc.setFillColor(237,233,254); doc.rect(lm, y, pw, 26, "F");
+        checkPage(32);
+        doc.setFillColor(237,233,254); doc.rect(lm, y, pw, 28, "F");
         doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(109,40,217);
         doc.text("CONTATTI PER INTERFERENZE", lm+5, y+7);
         doc.setFont("helvetica","normal"); doc.setTextColor(50,50,50); doc.setFontSize(8.5);
-        doc.text(`Responsabile: ${lastResult.contatti.azienda}`, lm+5, y+14);
-        doc.text(`Email: ${lastResult.contatti.email}   |   Tel: ${lastResult.contatti.telefono}`, lm+5, y+21);
-        y += 30;
+        doc.text(`Responsabile: ${lastResult.contatti.azienda}`, lm+5, y+15);
+        doc.text(`Email: ${lastResult.contatti.email}   |   Tel: ${lastResult.contatti.telefono}`, lm+5, y+22);
+        y += 33;
       }
     }
 
+    // ── Mappa ──
     if (mapImageData) {
-      if (y > 215) { doc.addPage(); y = 20; }
+      const imgW = pw; const imgH = Math.round(imgW * 0.56);
+      checkPage(imgH + 14);
       doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
       doc.text("MAPPA DEL TRACCIATO", lm, y); y += 5;
-      const imgW = pw; const imgH = imgW * 0.56;
       doc.addImage(mapImageData, "JPEG", lm, y, imgW, imgH);
+      y += imgH + 5;
     }
 
-    doc.setFontSize(7.5); doc.setTextColor(150); doc.setFont("helvetica","italic");
-    doc.text("Documento generato automaticamente. Non sostituisce una verifica tecnica in campo.", 105, 290, {align:"center"});
+    footer();
 
-    // Scarica PDF per l'utente
+    // ── Scarica PDF ──
     const filename = `verifica_${now.replace(/[/:, ]/g,"_")}.pdf`;
     doc.save(filename);
 
-    // Invia email solo se ci sono interferenze
+    // ── Invia email ──
     btn.textContent = "📧 Invio notifica...";
     try {
       const pdfB64 = !isOk ? doc.output("datauristring").split(",")[1] : null;
