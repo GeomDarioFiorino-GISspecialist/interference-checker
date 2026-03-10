@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
@@ -177,8 +177,9 @@
 
   // ── Mappa satellite ────────────────────────────────────────
   const map = L.map("map").setView([45.35, 9.68], 14);
-  L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
-    attribution: "© Google", maxZoom: 21
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "© Esri, Maxar, Earthstar Geographics",
+    maxZoom: 19
   }).addTo(map);
 
   // ── Ricerca indirizzo ──────────────────────────────────────
@@ -333,11 +334,30 @@
     const azienda = document.getElementById("inp-azienda").value.trim();
     const isOk    = lastResult.status === "non interferente";
 
-    // Screenshot mappa
+    // Screenshot mappa con leaflet-image (posizione corretta)
     let mapImageData = null;
     try {
-      const canvas = await html2canvas(document.getElementById("map"), { useCORS: true, logging: false });
-      mapImageData = canvas.toDataURL("image/jpeg", 0.85);
+      mapImageData = await new Promise((resolve, reject) => {
+        leafletImage(map, function(err, canvas) {
+          if (err) { reject(err); return; }
+          // Disegna anche la linea rossa sopra i tile
+          const ctx = canvas.getContext("2d");
+          const layers = drawnItems.getLayers();
+          if (layers.length > 0) {
+            const latlngs = layers[0].getLatLngs();
+            ctx.beginPath();
+            ctx.strokeStyle = "#ef4444";
+            ctx.lineWidth = 3;
+            latlngs.forEach((ll, i) => {
+              const pt = map.latLngToContainerPoint(ll);
+              if (i === 0) ctx.moveTo(pt.x, pt.y);
+              else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+          }
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        });
+      });
     } catch(e) { console.warn("Screenshot mappa non disponibile:", e); }
 
     // Genera PDF
