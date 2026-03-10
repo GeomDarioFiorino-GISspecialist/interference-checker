@@ -243,19 +243,3 @@ def debug_fields(username: str = Depends(verify_credentials)):
         "colonne": list(gdf.columns),
         "valori_prima_riga": {col: str(row[col]) for col in gdf.columns}
     }
-
-@app.get("/debug-email")
-def debug_email(username: str = Depends(verify_credentials)):
-    import os
-    app_pass = os.environ.get("GMAIL_APP_PASS", "NON TROVATA")
-    try:
-        send_email("Test", "Test Azienda", "test", [], "test", None)
-        return {"gmail_pass_trovata": app_pass != "NON TROVATA", "risultato": "email inviata"}
-    except Exception as e:
-        return {"gmail_pass_trovata": app_pass != "NON TROVATA", "errore": str(e)}
-```
-
-Poi aprimi questi due URL nel browser (con login `admin`/`DFGIS`):
-```
-https://interference-checker.onrender.com/debug-fields
-https://interference-checker.onrender.com/debug-email
