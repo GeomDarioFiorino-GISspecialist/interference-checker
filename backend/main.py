@@ -18,8 +18,9 @@ app = FastAPI(title="Interference Checker API", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["POST", "GET"],
-    allow_headers=["*"],
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["*", "Authorization"],
+    allow_credentials=True,
 )
 
 # ─── Credenziali ─────────────────────────────────────────────
