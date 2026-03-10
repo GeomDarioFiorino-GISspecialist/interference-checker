@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "nome": "Elettrodotto AT 220kV", "tensione": "220kV", "buffer_m": 40 },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [9.61, 45.38], [9.65, 45.36], [9.70, 45.35], [9.73, 45.33]
+        ]
+      }
+    }
+  ]
+}

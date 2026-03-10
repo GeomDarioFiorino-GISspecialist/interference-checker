@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "nome": "Gasdotto Nord", "pressione": "Alta", "buffer_m": 50 },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [9.65, 45.35], [9.68, 45.37], [9.72, 45.38], [9.76, 45.36]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nome": "Gasdotto Sud", "pressione": "Media", "buffer_m": 25 },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [9.60, 45.33], [9.64, 45.32], [9.69, 45.31], [9.74, 45.32]
+        ]
+      }
+    }
+  ]
+}
