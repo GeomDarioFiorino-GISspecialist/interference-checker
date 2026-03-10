@@ -13,169 +13,73 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
-
-    /* ── Login ── */
-    #login-overlay {
-      position: fixed; inset: 0; background: #0f1117;
-      display: flex; align-items: center; justify-content: center; z-index: 9999;
-    }
-    .login-box {
-      background: #1a1d27; border: 1px solid #2a2d3e;
-      border-radius: 12px; padding: 40px; width: 360px;
-    }
+    #login-overlay { position: fixed; inset: 0; background: #0f1117; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .login-box { background: #1a1d27; border: 1px solid #2a2d3e; border-radius: 12px; padding: 40px; width: 360px; }
     .login-box h2 { font-size: 20px; color: #fff; margin-bottom: 6px; }
     .login-box p  { font-size: 13px; color: #6b7280; margin-bottom: 28px; }
     .login-box label { font-size: 12px; color: #9ca3af; display: block; margin-bottom: 6px; }
-    .login-box input {
-      width: 100%; padding: 10px 12px; background: #0f1117;
-      border: 1px solid #2a2d3e; border-radius: 6px; color: #fff;
-      font-size: 14px; margin-bottom: 16px;
-    }
+    .login-box input { width: 100%; padding: 10px 12px; background: #0f1117; border: 1px solid #2a2d3e; border-radius: 6px; color: #fff; font-size: 14px; margin-bottom: 16px; }
     .login-box input:focus { outline: none; border-color: #3b82f6; }
-    #btn-login {
-      width: 100%; padding: 12px; background: #3b82f6; color: #fff;
-      border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-    }
+    #btn-login { width: 100%; padding: 12px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
     #btn-login:hover { background: #2563eb; }
     #login-error { font-size: 12px; color: #f87171; margin-top: 10px; text-align: center; min-height: 16px; }
-
-    /* ── Layout ── */
-    header {
-      background: #1a1d27; border-bottom: 1px solid #2a2d3e;
-      padding: 12px 20px; display: flex; align-items: center;
-      justify-content: space-between; z-index: 1000;
-    }
+    header { background: #1a1d27; border-bottom: 1px solid #2a2d3e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; }
     header h1 { font-size: 16px; font-weight: 600; color: #fff; }
-    #btn-logout {
-      font-size: 12px; color: #6b7280; background: none;
-      border: 1px solid #2a2d3e; border-radius: 6px; padding: 4px 10px; cursor: pointer;
-    }
+    #btn-logout { font-size: 12px; color: #6b7280; background: none; border: 1px solid #2a2d3e; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
     #btn-logout:hover { color: #f87171; border-color: #f87171; }
-
     .app-body { display: flex; flex: 1; overflow: hidden; }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 320px; background: #1a1d27; border-right: 1px solid #2a2d3e;
-      display: flex; flex-direction: column; overflow: hidden; z-index: 1000;
-    }
+    .sidebar { width: 320px; background: #1a1d27; border-right: 1px solid #2a2d3e; display: flex; flex-direction: column; overflow: hidden; z-index: 1000; }
     .sidebar-section { padding: 16px; border-bottom: 1px solid #2a2d3e; }
     .sidebar-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 12px; }
     .instructions { font-size: 13px; color: #9ca3af; line-height: 1.6; }
     .instructions li { margin-bottom: 6px; padding-left: 4px; }
     .instructions li::marker { color: #ef4444; }
-    .req-form input {
-      width: 100%; padding: 8px 10px; background: #0f1117;
-      border: 1px solid #2a2d3e; border-radius: 6px; color: #fff;
-      font-size: 12px; margin-bottom: 8px;
-    }
+    .req-form input { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2d3e; border-radius: 6px; color: #fff; font-size: 12px; margin-bottom: 8px; }
     .req-form input:focus { outline: none; border-color: #3b82f6; }
     .req-form input::placeholder { color: #4b5563; }
-
-    #btn-check {
-      width: 100%; padding: 12px; background: #3b82f6; color: #fff;
-      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: background 0.2s;
-    }
+    #btn-check { width: 100%; padding: 12px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
     #btn-check:hover { background: #2563eb; }
     #btn-check:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
-    #btn-clear {
-      width: 100%; padding: 8px; background: transparent; color: #6b7280;
-      border: 1px solid #2a2d3e; border-radius: 8px; font-size: 13px;
-      cursor: pointer; margin-top: 8px; transition: all 0.2s;
-    }
+    #btn-clear { width: 100%; padding: 8px; background: transparent; color: #6b7280; border: 1px solid #2a2d3e; border-radius: 8px; font-size: 13px; cursor: pointer; margin-top: 8px; }
     #btn-clear:hover { border-color: #ef4444; color: #ef4444; }
-    #btn-pdf {
-      width: 100%; padding: 10px; background: #065f46; color: #6ee7b7;
-      border: 1px solid #059669; border-radius: 8px; font-size: 13px;
-      font-weight: 600; cursor: pointer; margin-top: 8px; display: none;
-    }
+    #btn-pdf { width: 100%; padding: 10px; background: #065f46; color: #6ee7b7; border: 1px solid #059669; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; display: none; }
     #btn-pdf:hover { background: #047857; }
     #btn-pdf:disabled { background: #374151; color: #6b7280; cursor: not-allowed; border-color: #374151; }
-
     .results-area { flex: 1; overflow-y: auto; padding: 16px; }
     .result-placeholder { text-align: center; color: #374151; font-size: 13px; padding: 40px 0; }
     .result-placeholder .icon { font-size: 36px; margin-bottom: 10px; }
-    .status-badge {
-      display: flex; align-items: center; gap: 10px; padding: 14px;
-      border-radius: 8px; margin-bottom: 14px; font-weight: 600; font-size: 14px;
-    }
+    .status-badge { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 8px; margin-bottom: 14px; font-weight: 600; font-size: 14px; }
     .status-ok  { background: #052e16; border: 1px solid #16a34a; color: #4ade80; }
     .status-err { background: #2d0a0a; border: 1px solid #dc2626; color: #f87171; }
-    .interference-card {
-      background: #12151f; border: 1px solid #2a2d3e;
-      border-left: 3px solid #ef4444; border-radius: 6px;
-      padding: 12px; margin-bottom: 8px;
-    }
+    .interference-card { background: #12151f; border: 1px solid #2a2d3e; border-left: 3px solid #ef4444; border-radius: 6px; padding: 12px; margin-bottom: 8px; }
     .interference-card .layer-name { font-size: 13px; font-weight: 600; color: #f3f4f6; margin-bottom: 6px; }
     .detail { font-size: 12px; color: #9ca3af; line-height: 1.6; }
     .detail-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
     .detail-label { color: #6b7280; }
     .detail-value { color: #d1d5db; }
-    .contact-card {
-      background: #1e1b2e; border: 1px solid #4c1d95;
-      border-radius: 8px; padding: 14px; margin-top: 12px;
-    }
+    .contact-card { background: #1e1b2e; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px; margin-top: 12px; }
     .contact-card h3 { font-size: 11px; color: #a78bfa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
     .contact-card .line { font-size: 13px; color: #c4b5fd; margin-bottom: 4px; }
     .loading { text-align: center; padding: 30px; color: #6b7280; font-size: 13px; }
-    .spinner {
-      width: 28px; height: 28px; border: 3px solid #2a2d3e;
-      border-top-color: #3b82f6; border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 10px;
-    }
+    .spinner { width: 28px; height: 28px; border: 3px solid #2a2d3e; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Mappa ── */
     #map-wrapper { flex: 1; position: relative; }
     #map { width: 100%; height: 100%; }
-
-    /* ── Barra ricerca ── */
-    #search-bar {
-      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-      z-index: 1000; display: flex; gap: 6px;
-      background: rgba(15,17,23,0.85); border: 1px solid #2a2d3e;
-      border-radius: 10px; padding: 8px 10px;
-      backdrop-filter: blur(6px);
-      width: min(420px, calc(100% - 40px));
-    }
-    #search-input {
-      flex: 1; background: none; border: none; outline: none;
-      color: #fff; font-size: 13px;
-    }
+    #search-bar { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 6px; background: rgba(15,17,23,0.85); border: 1px solid #2a2d3e; border-radius: 10px; padding: 8px 10px; backdrop-filter: blur(6px); width: min(420px, calc(100% - 40px)); }
+    #search-input { flex: 1; background: none; border: none; outline: none; color: #fff; font-size: 13px; }
     #search-input::placeholder { color: #6b7280; }
-    #btn-search {
-      background: #3b82f6; border: none; border-radius: 6px;
-      color: #fff; font-size: 12px; padding: 4px 12px; cursor: pointer;
-    }
+    #btn-search { background: #3b82f6; border: none; border-radius: 6px; color: #fff; font-size: 12px; padding: 4px 12px; cursor: pointer; }
     #btn-search:hover { background: #2563eb; }
-
-    #search-results {
-      position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
-      z-index: 1001; width: min(420px, calc(100% - 40px));
-      background: #1a1d27; border: 1px solid #2a2d3e; border-radius: 8px;
-      overflow: hidden; display: none;
-    }
-    .search-result-item {
-      padding: 10px 14px; font-size: 12px; color: #d1d5db;
-      cursor: pointer; border-bottom: 1px solid #2a2d3e;
-    }
+    #search-results { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); z-index: 1001; width: min(420px, calc(100% - 40px)); background: #1a1d27; border: 1px solid #2a2d3e; border-radius: 8px; overflow: hidden; display: none; }
+    .search-result-item { padding: 10px 14px; font-size: 12px; color: #d1d5db; cursor: pointer; border-bottom: 1px solid #2a2d3e; }
     .search-result-item:last-child { border-bottom: none; }
     .search-result-item:hover { background: #2a2d3e; }
-
     #trace-info { font-size: 12px; color: #6b7280; margin-top: 8px; min-height: 16px; }
-
-    /* nodi disegno più piccoli */
-    .leaflet-div-icon {
-      width: 8px !important; height: 8px !important;
-      margin-left: -4px !important; margin-top: -4px !important;
-      border-radius: 50%;
-    }
+    .leaflet-div-icon { width: 8px !important; height: 8px !important; margin-left: -4px !important; margin-top: -4px !important; border-radius: 50%; }
   </style>
 </head>
 <body>
 
-<!-- Login -->
 <div id="login-overlay">
   <div class="login-box">
     <h2>🗺️ Verifica Interferenze</h2>
@@ -189,7 +93,6 @@
   </div>
 </div>
 
-<!-- App -->
 <header>
   <h1>🗺️ Verifica Interferenze Rete Gas</h1>
   <button id="btn-logout">Esci</button>
@@ -229,7 +132,6 @@
     </div>
   </div>
 
-  <!-- Mappa + barra ricerca -->
   <div id="map-wrapper">
     <div id="search-bar">
       <input type="text" id="search-input" placeholder="🔍  Cerca indirizzo..."/>
@@ -265,9 +167,7 @@
       authHeader = "";
     }
   });
-  document.getElementById("inp-pass").addEventListener("keydown", e => {
-    if (e.key === "Enter") document.getElementById("btn-login").click();
-  });
+  document.getElementById("inp-pass").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("btn-login").click(); });
   document.getElementById("btn-logout").addEventListener("click", () => {
     authHeader = ""; lastResult = null;
     document.getElementById("login-overlay").style.display = "flex";
@@ -275,16 +175,13 @@
     document.getElementById("login-error").textContent = "";
   });
 
-  // ── Mappa satellite Google ─────────────────────────────────
+  // ── Mappa satellite ────────────────────────────────────────
   const map = L.map("map").setView([45.35, 9.68], 14);
-
   L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
-    attribution: "© Google",
-    maxZoom: 21,
-    subdomains: ["mt0","mt1","mt2","mt3"]
+    attribution: "© Google", maxZoom: 21
   }).addTo(map);
 
-  // ── Ricerca indirizzo (Nominatim) ──────────────────────────
+  // ── Ricerca indirizzo ──────────────────────────────────────
   const searchInput   = document.getElementById("search-input");
   const searchResults = document.getElementById("search-results");
 
@@ -293,30 +190,21 @@
     if (!q) return;
     searchResults.style.display = "none";
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`,
-        { headers: { "Accept-Language": "it" } }
-      );
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`, { headers: { "Accept-Language": "it" } });
       const data = await res.json();
       if (!data.length) {
         searchResults.innerHTML = `<div class="search-result-item" style="color:#6b7280">Nessun risultato trovato</div>`;
-        searchResults.style.display = "block";
-        return;
+        searchResults.style.display = "block"; return;
       }
-      searchResults.innerHTML = data.map((r, i) =>
-        `<div class="search-result-item" data-i="${i}" data-lat="${r.lat}" data-lon="${r.lon}">
-          📍 ${r.display_name}
-        </div>`
+      searchResults.innerHTML = data.map((r,i) =>
+        `<div class="search-result-item" data-lat="${r.lat}" data-lon="${r.lon}">📍 ${r.display_name}</div>`
       ).join("");
       searchResults.style.display = "block";
-
       searchResults.querySelectorAll(".search-result-item[data-lat]").forEach(el => {
         el.addEventListener("click", () => {
-          const lat = parseFloat(el.dataset.lat);
-          const lon = parseFloat(el.dataset.lon);
-          map.setView([lat, lon], 17);
+          map.setView([parseFloat(el.dataset.lat), parseFloat(el.dataset.lon)], 17);
           if (searchMarker) map.removeLayer(searchMarker);
-          searchMarker = L.circleMarker([lat, lon], {
+          searchMarker = L.circleMarker([parseFloat(el.dataset.lat), parseFloat(el.dataset.lon)], {
             radius: 8, color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.8
           }).addTo(map);
           searchInput.value = el.textContent.trim().replace("📍 ", "");
@@ -328,31 +216,24 @@
       searchResults.style.display = "block";
     }
   }
-
   document.getElementById("btn-search").addEventListener("click", doSearch);
   searchInput.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
   document.addEventListener("click", e => {
-    if (!document.getElementById("search-bar").contains(e.target) &&
-        !searchResults.contains(e.target)) {
+    if (!document.getElementById("search-bar").contains(e.target) && !searchResults.contains(e.target))
       searchResults.style.display = "none";
-    }
   });
 
   // ── Disegno ────────────────────────────────────────────────
-  const drawnItems = new L.FeatureGroup();
+  const drawnItems   = new L.FeatureGroup();
   map.addLayer(drawnItems);
-
   const redLineStyle = { color: "#ef4444", weight: 3 };
-
-  const smallIcon = L.DivIcon.extend({});
-  const drawControl = new L.Control.Draw({
+  const drawControl  = new L.Control.Draw({
     edit: { featureGroup: drawnItems, remove: true },
     draw: {
       polyline: {
         shapeOptions: redLineStyle,
         icon: new L.DivIcon({
-          iconSize: new L.Point(7, 7),
-          className: "leaflet-div-icon",
+          iconSize: new L.Point(7,7), className: "leaflet-div-icon",
           html: '<div style="width:7px;height:7px;background:#fff;border:2px solid #ef4444;border-radius:50%;"></div>'
         })
       },
@@ -370,13 +251,11 @@
     document.getElementById("btn-pdf").style.display = "none";
     lastResult = null;
   });
-
   map.on(L.Draw.Event.DELETED, function() {
     document.getElementById("trace-info").textContent = "Nessun tracciato disegnato";
     document.getElementById("btn-check").disabled = true;
     document.getElementById("btn-pdf").style.display = "none";
-    lastResult = null;
-    showPlaceholder();
+    lastResult = null; showPlaceholder();
   });
 
   // ── Verifica ───────────────────────────────────────────────
@@ -384,25 +263,17 @@
     const nome    = document.getElementById("inp-nome").value.trim();
     const azienda = document.getElementById("inp-azienda").value.trim();
     if (!nome || !azienda) { alert("Compila i dati del richiedente prima di procedere."); return; }
-
     const layers = drawnItems.getLayers();
     if (layers.length === 0) return;
-
     showLoading();
     document.getElementById("btn-pdf").style.display = "none";
-
-    const latlngs   = layers[0].getLatLngs();
-    const coordinates = latlngs.map(ll => [ll.lng, ll.lat]);
-    const geojson = {
-      type: "FeatureCollection",
-      features: [{ type: "Feature", geometry: { type: "LineString", coordinates }, properties: {} }]
-    };
-
+    const coordinates = drawnItems.getLayers()[0].getLatLngs().map(ll => [ll.lng, ll.lat]);
+    const geojson = { type:"FeatureCollection", features:[{ type:"Feature", geometry:{ type:"LineString", coordinates }, properties:{} }] };
     try {
       const res = await fetch(API_BASE + "/check-interference", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": authHeader },
-        body: JSON.stringify({ geojson })
+        body: JSON.stringify({ geojson, nome, azienda })
       });
       if (res.status === 401) { alert("Sessione scaduta, effettua di nuovo il login."); return; }
       if (!res.ok) throw new Error(`Errore server: ${res.status}`);
@@ -417,30 +288,22 @@
     document.getElementById("btn-check").disabled = true;
     document.getElementById("btn-pdf").style.display = "none";
     document.getElementById("trace-info").textContent = "Nessun tracciato disegnato";
-    lastResult = null;
-    showPlaceholder();
+    lastResult = null; showPlaceholder();
   });
 
   // ── UI ─────────────────────────────────────────────────────
   function showPlaceholder() {
-    document.getElementById("results-area").innerHTML = `
-      <div class="result-placeholder"><div class="icon">📐</div>
-      Cerca un indirizzo, disegna un tracciato<br/>e avvia la verifica</div>`;
+    document.getElementById("results-area").innerHTML = `<div class="result-placeholder"><div class="icon">📐</div>Cerca un indirizzo, disegna un tracciato<br/>e avvia la verifica</div>`;
   }
   function showLoading() {
-    document.getElementById("results-area").innerHTML = `
-      <div class="loading"><div class="spinner"></div>Analisi in corso...</div>`;
+    document.getElementById("results-area").innerHTML = `<div class="loading"><div class="spinner"></div>Analisi in corso...</div>`;
   }
   function showError(msg) {
-    document.getElementById("results-area").innerHTML = `
-      <div class="status-badge status-err">❌ Errore di connessione</div>
-      <div style="font-size:12px;color:#6b7280;padding:8px">${msg}</div>`;
+    document.getElementById("results-area").innerHTML = `<div class="status-badge status-err">❌ Errore di connessione</div><div style="font-size:12px;color:#6b7280;padding:8px">${msg}</div>`;
   }
   function showResults(result) {
     const isOk = result.status === "non interferente";
-    let html = `<div class="status-badge ${isOk ? "status-ok" : "status-err"}">
-      ${isOk ? "✅ Nessuna interferenza rilevata" : `❌ ${result.interferenze_count} interferenza/e rilevata/e`}
-    </div>`;
+    let html = `<div class="status-badge ${isOk ? "status-ok" : "status-err"}">${isOk ? "✅ Nessuna interferenza rilevata" : `❌ ${result.interferenze_count} interferenza/e rilevata/e`}</div>`;
     if (!isOk && result.interferenze) {
       result.interferenze.forEach(inf => {
         html += `<div class="interference-card">
@@ -453,78 +316,64 @@
         </div>`;
       });
       if (result.contatti) {
-        html += `<div class="contact-card">
-          <h3>📞 Contatti per interferenze</h3>
-          <div class="line">🏢 ${result.contatti.azienda}</div>
-          <div class="line">✉️ ${result.contatti.email}</div>
-          <div class="line">📱 ${result.contatti.telefono}</div>
-        </div>`;
+        html += `<div class="contact-card"><h3>📞 Contatti per interferenze</h3><div class="line">🏢 ${result.contatti.azienda}</div><div class="line">✉️ ${result.contatti.email}</div><div class="line">📱 ${result.contatti.telefono}</div></div>`;
       }
     }
     document.getElementById("results-area").innerHTML = html;
   }
 
-  // ── PDF con screenshot mappa ───────────────────────────────
+  // ── PDF + invio email ──────────────────────────────────────
   document.getElementById("btn-pdf").addEventListener("click", async () => {
     if (!lastResult) return;
     const btn = document.getElementById("btn-pdf");
-    btn.disabled = true;
-    btn.textContent = "⏳ Generazione in corso...";
+    btn.disabled = true; btn.textContent = "⏳ Generazione in corso...";
 
+    const now     = new Date().toLocaleString("it-IT");
+    const nome    = document.getElementById("inp-nome").value.trim();
+    const azienda = document.getElementById("inp-azienda").value.trim();
+    const isOk    = lastResult.status === "non interferente";
+
+    // Screenshot mappa
     let mapImageData = null;
     try {
       const canvas = await html2canvas(document.getElementById("map"), { useCORS: true, logging: false });
       mapImageData = canvas.toDataURL("image/jpeg", 0.85);
     } catch(e) { console.warn("Screenshot mappa non disponibile:", e); }
 
+    // Genera PDF
     const { jsPDF } = window.jspdf;
-    const doc  = new jsPDF();
-    const now  = new Date().toLocaleString("it-IT");
-    const nome    = document.getElementById("inp-nome").value.trim();
-    const azienda = document.getElementById("inp-azienda").value.trim();
-    const isOk    = lastResult.status === "non interferente";
+    const doc = new jsPDF();
     const lm = 20; const pw = 170; let y = 20;
 
-    // Intestazione
-    doc.setFillColor(26, 29, 39);
-    doc.rect(0, 0, 210, 42, "F");
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(15); doc.setFont("helvetica","bold");
-    doc.text("CERTIFICATO DI VERIFICA INTERFERENZE", 105, 17, { align:"center" });
+    doc.setFillColor(26,29,39); doc.rect(0,0,210,42,"F");
+    doc.setTextColor(255,255,255); doc.setFontSize(15); doc.setFont("helvetica","bold");
+    doc.text("CERTIFICATO DI VERIFICA INTERFERENZE", 105, 17, {align:"center"});
     doc.setFontSize(9); doc.setFont("helvetica","normal");
-    doc.text("Rete di distribuzione gas — Servizio automatico", 105, 26, { align:"center" });
+    doc.text("Rete di distribuzione gas — Servizio automatico", 105, 26, {align:"center"});
     doc.setFontSize(8); doc.setTextColor(160,160,160);
-    doc.text(`Generato il ${now}`, 105, 34, { align:"center" });
+    doc.text(`Generato il ${now}`, 105, 34, {align:"center"});
     y = 52;
 
-    // Richiedente
     doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
     doc.text("DATI RICHIEDENTE", lm, y); y += 7;
     doc.setFont("helvetica","normal"); doc.setFontSize(9);
     doc.text(`Nome e cognome: ${nome}`, lm, y); y += 5;
     doc.text(`Azienda / Ente:  ${azienda}`, lm, y); y += 12;
 
-    // Esito
     doc.setFontSize(12); doc.setFont("helvetica","bold");
     if (isOk) { doc.setFillColor(5,46,22); doc.setTextColor(74,222,128); }
     else       { doc.setFillColor(45,10,10); doc.setTextColor(248,113,113); }
     doc.roundedRect(lm, y, pw, 13, 3, 3, "F");
-    doc.text(
-      isOk ? "✓  NESSUNA INTERFERENZA RILEVATA" : `✗  ${lastResult.interferenze_count} INTERFERENZA/E RILEVATA/E`,
-      105, y + 8.5, { align:"center" }
-    );
+    doc.text(isOk ? "✓  NESSUNA INTERFERENZA RILEVATA" : `✗  ${lastResult.interferenze_count} INTERFERENZA/E RILEVATA/E`, 105, y+8.5, {align:"center"});
     y += 18;
 
-    // Dettaglio
     if (!isOk && lastResult.interferenze) {
       doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
       doc.text("DETTAGLIO INTERFERENZE", lm, y); y += 7;
-
-      lastResult.interferenze.forEach((inf, i) => {
+      lastResult.interferenze.forEach((inf,i) => {
         const cardH = 46;
         doc.setFillColor(248,248,252); doc.rect(lm, y, pw, cardH, "F");
-        doc.setDrawColor(239,68,68); doc.setLineWidth(0.8);
-        doc.line(lm, y, lm, y + cardH); doc.setLineWidth(0.2);
+        doc.setDrawColor(239,68,68); doc.setLineWidth(0.8); doc.line(lm, y, lm, y+cardH); doc.setLineWidth(0.2);
         doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(220,38,38);
         doc.text(`${i+1}. ${inf.layer} — ${inf.tipo_interferenza}`, lm+5, y+7);
         doc.setTextColor(50,50,50); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
@@ -535,7 +384,6 @@
         doc.text(`Distanza minima dal tracciato: ${inf.distanza_minima_m} m`, lm+5, y+40);
         y += cardH + 4;
       });
-
       if (lastResult.contatti) {
         y += 2;
         doc.setFillColor(237,233,254); doc.rect(lm, y, pw, 26, "F");
@@ -548,21 +396,38 @@
       }
     }
 
-    // Screenshot mappa
     if (mapImageData) {
       if (y > 215) { doc.addPage(); y = 20; }
       doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
       doc.text("MAPPA DEL TRACCIATO", lm, y); y += 5;
       const imgW = pw; const imgH = imgW * 0.56;
       doc.addImage(mapImageData, "JPEG", lm, y, imgW, imgH);
-      y += imgH + 5;
     }
 
-    // Footer
     doc.setFontSize(7.5); doc.setTextColor(150); doc.setFont("helvetica","italic");
-    doc.text("Documento generato automaticamente. Non sostituisce una verifica tecnica in campo.", 105, 290, { align:"center" });
+    doc.text("Documento generato automaticamente. Non sostituisce una verifica tecnica in campo.", 105, 290, {align:"center"});
 
-    doc.save(`verifica_${now.replace(/[/:, ]/g,"_")}.pdf`);
+    // Scarica PDF per l'utente
+    const filename = `verifica_${now.replace(/[/:, ]/g,"_")}.pdf`;
+    doc.save(filename);
+
+    // Invia email solo se ci sono interferenze
+    btn.textContent = "📧 Invio notifica...";
+    try {
+      const pdfB64 = !isOk ? doc.output("datauristring").split(",")[1] : null;
+      await fetch(API_BASE + "/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": authHeader },
+        body: JSON.stringify({
+          nome, azienda,
+          esito: lastResult.status,
+          interferenze: lastResult.interferenze || [],
+          now,
+          pdf_b64: pdfB64
+        })
+      });
+    } catch(e) { console.warn("Invio email fallito:", e); }
+
     btn.disabled = false;
     btn.textContent = "📄 Scarica certificato PDF";
   });
