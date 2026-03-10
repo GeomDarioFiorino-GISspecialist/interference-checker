@@ -190,18 +190,25 @@ def check_interference(req: CheckRequest, username: str = Depends(verify_credent
                     if geom_metric.intersects(feat_geom_metric)
                     else f"entro fascia di rispetto ({buffer_m}m)"
                 )
+                 def get_field(f, name):
+                    try:
+                        v = f[name]
+                        return str(v) if v is not None and str(v) != "nan" else "N/D"
+                    except:
+                        return "N/D"
+
                 results.append({
                     "layer":             cfg["label"],
                     "icon":              cfg["icon"],
                     "tipo_interferenza": interference_type,
                     "distanza_minima_m": round(dist, 2),
                     "buffer_applicato_m": buffer_m,
-                    "specie_rete":       str(feature.get("type",       "N/D")),
-                    "id":                str(feature.get("id",         "N/D")),
-                    "area_code":         str(feature.get("area_code",  "N/D")),
-                    "lunghezza":         str(feature.get("length",     "N/D")),
-                    "diametro":          str(feature.get("nominal_di", "N/D")),
-                    "materiale":         str(feature.get("material",   "N/D")),
+                    "specie_rete":       get_field(feature, "type"),
+                    "id":                get_field(feature, "id"),
+                    "area_code":         get_field(feature, "area_code"),
+                    "lunghezza":         get_field(feature, "length"),
+                    "diametro":          get_field(feature, "nominal_di"),
+                    "materiale":         get_field(feature, "material"),
                 })
 
     return {
