@@ -19,10 +19,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["POST", "GET", "OPTIONS"],
-    allow_headers=["*", "Authorization"],
-    allow_credentials=True,
+    allow_headers=["*"],
 )
-
 # ─── Credenziali ─────────────────────────────────────────────
 VALID_USERNAME = "admin"
 VALID_PASSWORD = "DFGIS"
