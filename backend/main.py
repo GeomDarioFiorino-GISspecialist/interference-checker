@@ -45,6 +45,7 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 GMAIL_USER     = "dario98frn@gmail.com"
 GMAIL_APP_PASS = os.environ.get("GMAIL_APP_PASS", "")
 NOTIFY_TO      = "dario98frn@gmail.com"
+
 CONTACT_EMAIL  = "dario98frn@gmail.com"
 CONTACT_PHONE  = "+39 389 389 3893"
 COMPANY_NAME   = "DarioGIS"
@@ -190,25 +191,23 @@ def check_interference(req: CheckRequest, username: str = Depends(verify_credent
                     if geom_metric.intersects(feat_geom_metric)
                     else f"entro fascia di rispetto ({buffer_m}m)"
                 )
-                 def get_field(f, name):
+                def gf(f, name):
                     try:
                         v = f[name]
                         return str(v) if v is not None and str(v) != "nan" else "N/D"
-                    except:
-                        return "N/D"
-
+                    except: return "N/D"
                 results.append({
                     "layer":             cfg["label"],
                     "icon":              cfg["icon"],
                     "tipo_interferenza": interference_type,
                     "distanza_minima_m": round(dist, 2),
                     "buffer_applicato_m": buffer_m,
-                    "specie_rete":       get_field(feature, "type"),
-                    "id":                get_field(feature, "id"),
-                    "area_code":         get_field(feature, "area_code"),
-                    "lunghezza":         get_field(feature, "length"),
-                    "diametro":          get_field(feature, "nominal_di"),
-                    "materiale":         get_field(feature, "material"),
+                    "specie_rete":       gf(feature, "type"),
+                    "id":                gf(feature, "id"),
+                    "area_code":         gf(feature, "area_code"),
+                    "lunghezza":         gf(feature, "length"),
+                    "diametro":          gf(feature, "nominal_di"),
+                    "materiale":         gf(feature, "material"),
                 })
 
     return {
