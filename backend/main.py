@@ -43,12 +43,13 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 
 # ─── Configurazione email ─────────────────────────────────────
 GMAIL_USER     = "dario98frn@gmail.com"
-GMAIL_APP_PASS = "crpjyvuwmrwunrdb"   # password app senza spazi
+import os
+GMAIL_APP_PASS = os.environ.get("GMAIL_APP_PASS", "")   # password app senza spazi
 NOTIFY_TO      = "dario98frn@gmail.com"
 
 CONTACT_EMAIL  = "dario98frn@gmail.com"
-CONTACT_PHONE  = "+39 389 915 7166"
-COMPANY_NAME   = "Dario Fiorino"
+CONTACT_PHONE  = "+39 389 389 3893"
+COMPANY_NAME   = "DarioGIS"
 
 # ─── Layer ───────────────────────────────────────────────────
 LAYERS_DIR = Path(__file__).parent / "layers"
