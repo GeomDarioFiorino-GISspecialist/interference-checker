@@ -9,21 +9,22 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
 
-    /* ── Login overlay ── */
+    /* ── Login ── */
     #login-overlay {
       position: fixed; inset: 0; background: #0f1117;
       display: flex; align-items: center; justify-content: center; z-index: 9999;
     }
     .login-box {
-      background: #1a1d27; border: 1px solid #2a2d3e; border-radius: 12px;
-      padding: 40px; width: 360px;
+      background: #1a1d27; border: 1px solid #2a2d3e;
+      border-radius: 12px; padding: 40px; width: 360px;
     }
     .login-box h2 { font-size: 20px; color: #fff; margin-bottom: 6px; }
-    .login-box p { font-size: 13px; color: #6b7280; margin-bottom: 28px; }
+    .login-box p  { font-size: 13px; color: #6b7280; margin-bottom: 28px; }
     .login-box label { font-size: 12px; color: #9ca3af; display: block; margin-bottom: 6px; }
     .login-box input {
       width: 100%; padding: 10px 12px; background: #0f1117;
@@ -33,13 +34,12 @@
     .login-box input:focus { outline: none; border-color: #3b82f6; }
     #btn-login {
       width: 100%; padding: 12px; background: #3b82f6; color: #fff;
-      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: background 0.2s;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
     }
     #btn-login:hover { background: #2563eb; }
     #login-error { font-size: 12px; color: #f87171; margin-top: 10px; text-align: center; min-height: 16px; }
 
-    /* ── App ── */
+    /* ── Layout ── */
     header {
       background: #1a1d27; border-bottom: 1px solid #2a2d3e;
       padding: 12px 20px; display: flex; align-items: center;
@@ -47,12 +47,14 @@
     }
     header h1 { font-size: 16px; font-weight: 600; color: #fff; }
     #btn-logout {
-      font-size: 12px; color: #6b7280; background: none; border: 1px solid #2a2d3e;
-      border-radius: 6px; padding: 4px 10px; cursor: pointer;
+      font-size: 12px; color: #6b7280; background: none;
+      border: 1px solid #2a2d3e; border-radius: 6px; padding: 4px 10px; cursor: pointer;
     }
     #btn-logout:hover { color: #f87171; border-color: #f87171; }
 
     .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
     .sidebar {
       width: 320px; background: #1a1d27; border-right: 1px solid #2a2d3e;
       display: flex; flex-direction: column; overflow: hidden; z-index: 1000;
@@ -61,7 +63,14 @@
     .sidebar-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 12px; }
     .instructions { font-size: 13px; color: #9ca3af; line-height: 1.6; }
     .instructions li { margin-bottom: 6px; padding-left: 4px; }
-    .instructions li::marker { color: #3b82f6; }
+    .instructions li::marker { color: #ef4444; }
+    .req-form input {
+      width: 100%; padding: 8px 10px; background: #0f1117;
+      border: 1px solid #2a2d3e; border-radius: 6px; color: #fff;
+      font-size: 12px; margin-bottom: 8px;
+    }
+    .req-form input:focus { outline: none; border-color: #3b82f6; }
+    .req-form input::placeholder { color: #4b5563; }
 
     #btn-check {
       width: 100%; padding: 12px; background: #3b82f6; color: #fff;
@@ -79,22 +88,20 @@
     #btn-pdf {
       width: 100%; padding: 10px; background: #065f46; color: #6ee7b7;
       border: 1px solid #059669; border-radius: 8px; font-size: 13px;
-      font-weight: 600; cursor: pointer; margin-top: 8px; transition: all 0.2s;
-      display: none;
+      font-weight: 600; cursor: pointer; margin-top: 8px; display: none;
     }
     #btn-pdf:hover { background: #047857; }
+    #btn-pdf:disabled { background: #374151; color: #6b7280; cursor: not-allowed; border-color: #374151; }
 
     .results-area { flex: 1; overflow-y: auto; padding: 16px; }
     .result-placeholder { text-align: center; color: #374151; font-size: 13px; padding: 40px 0; }
     .result-placeholder .icon { font-size: 36px; margin-bottom: 10px; }
-
     .status-badge {
       display: flex; align-items: center; gap: 10px; padding: 14px;
       border-radius: 8px; margin-bottom: 14px; font-weight: 600; font-size: 14px;
     }
-    .status-ok { background: #052e16; border: 1px solid #16a34a; color: #4ade80; }
+    .status-ok  { background: #052e16; border: 1px solid #16a34a; color: #4ade80; }
     .status-err { background: #2d0a0a; border: 1px solid #dc2626; color: #f87171; }
-
     .interference-card {
       background: #12151f; border: 1px solid #2a2d3e;
       border-left: 3px solid #ef4444; border-radius: 6px;
@@ -105,29 +112,65 @@
     .detail-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
     .detail-label { color: #6b7280; }
     .detail-value { color: #d1d5db; }
-
     .contact-card {
       background: #1e1b2e; border: 1px solid #4c1d95;
       border-radius: 8px; padding: 14px; margin-top: 12px;
     }
-    .contact-card h3 { font-size: 12px; color: #a78bfa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .contact-card h3 { font-size: 11px; color: #a78bfa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
     .contact-card .line { font-size: 13px; color: #c4b5fd; margin-bottom: 4px; }
-
     .loading { text-align: center; padding: 30px; color: #6b7280; font-size: 13px; }
-    .spinner { width: 28px; height: 28px; border: 3px solid #2a2d3e; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid #2a2d3e;
+      border-top-color: #3b82f6; border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #map { flex: 1; }
+    /* ── Mappa ── */
+    #map-wrapper { flex: 1; position: relative; }
+    #map { width: 100%; height: 100%; }
+
+    /* ── Barra ricerca ── */
+    #search-bar {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; display: flex; gap: 6px;
+      background: rgba(15,17,23,0.85); border: 1px solid #2a2d3e;
+      border-radius: 10px; padding: 8px 10px;
+      backdrop-filter: blur(6px);
+      width: min(420px, calc(100% - 40px));
+    }
+    #search-input {
+      flex: 1; background: none; border: none; outline: none;
+      color: #fff; font-size: 13px;
+    }
+    #search-input::placeholder { color: #6b7280; }
+    #btn-search {
+      background: #3b82f6; border: none; border-radius: 6px;
+      color: #fff; font-size: 12px; padding: 4px 12px; cursor: pointer;
+    }
+    #btn-search:hover { background: #2563eb; }
+
+    #search-results {
+      position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+      z-index: 1001; width: min(420px, calc(100% - 40px));
+      background: #1a1d27; border: 1px solid #2a2d3e; border-radius: 8px;
+      overflow: hidden; display: none;
+    }
+    .search-result-item {
+      padding: 10px 14px; font-size: 12px; color: #d1d5db;
+      cursor: pointer; border-bottom: 1px solid #2a2d3e;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: #2a2d3e; }
+
     #trace-info { font-size: 12px; color: #6b7280; margin-top: 8px; min-height: 16px; }
 
-    /* ── Richiedente form ── */
-    .req-form input {
-      width: 100%; padding: 8px 10px; background: #0f1117;
-      border: 1px solid #2a2d3e; border-radius: 6px; color: #fff;
-      font-size: 12px; margin-bottom: 8px;
+    /* nodi disegno più piccoli */
+    .leaflet-div-icon {
+      width: 8px !important; height: 8px !important;
+      margin-left: -4px !important; margin-top: -4px !important;
+      border-radius: 50%;
     }
-    .req-form input:focus { outline: none; border-color: #3b82f6; }
-    .req-form input::placeholder { color: #4b5563; }
   </style>
 </head>
 <body>
@@ -154,25 +197,22 @@
 
 <div class="app-body">
   <div class="sidebar">
-
     <div class="sidebar-section">
       <h2>Richiedente</h2>
       <div class="req-form">
-        <input type="text" id="inp-nome" placeholder="Nome e cognome *"/>
+        <input type="text" id="inp-nome"    placeholder="Nome e cognome *"/>
         <input type="text" id="inp-azienda" placeholder="Azienda / Ente *"/>
       </div>
     </div>
-
     <div class="sidebar-section">
       <h2>Istruzioni</h2>
       <ol class="instructions">
-        <li>Compila i dati del richiedente</li>
+        <li>Cerca l'indirizzo nella barra in alto</li>
         <li>Clicca l'icona <strong>linea</strong> sulla mappa</li>
         <li>Disegna il tracciato, doppio clic per terminare</li>
         <li>Premi <strong>Verifica interferenze</strong></li>
       </ol>
     </div>
-
     <div class="sidebar-section">
       <h2>Azione</h2>
       <div id="trace-info">Nessun tracciato disegnato</div>
@@ -181,32 +221,37 @@
       <button id="btn-clear">Cancella tracciato</button>
       <button id="btn-pdf">📄 Scarica certificato PDF</button>
     </div>
-
     <div class="results-area" id="results-area">
       <div class="result-placeholder">
         <div class="icon">📐</div>
-        Compila i dati, disegna un tracciato<br/>e avvia la verifica
+        Cerca un indirizzo, disegna un tracciato<br/>e avvia la verifica
       </div>
     </div>
   </div>
 
-  <div id="map"></div>
+  <!-- Mappa + barra ricerca -->
+  <div id="map-wrapper">
+    <div id="search-bar">
+      <input type="text" id="search-input" placeholder="🔍  Cerca indirizzo..."/>
+      <button id="btn-search">Cerca</button>
+    </div>
+    <div id="search-results"></div>
+    <div id="map"></div>
+  </div>
 </div>
 
 <script>
   const API_BASE = "https://interference-checker.onrender.com";
   let authHeader = "";
   let lastResult = null;
-  let lastGeojson = null;
+  let searchMarker = null;
 
   // ── Login ──────────────────────────────────────────────────
   document.getElementById("btn-login").addEventListener("click", async () => {
     const user = document.getElementById("inp-user").value.trim();
     const pass = document.getElementById("inp-pass").value.trim();
     if (!user || !pass) { document.getElementById("login-error").textContent = "Inserisci username e password"; return; }
-
     authHeader = "Basic " + btoa(user + ":" + pass);
-
     try {
       const res = await fetch(API_BASE + "/health", { headers: { "Authorization": authHeader } });
       if (res.ok) {
@@ -220,32 +265,97 @@
       authHeader = "";
     }
   });
-
   document.getElementById("inp-pass").addEventListener("keydown", e => {
     if (e.key === "Enter") document.getElementById("btn-login").click();
   });
-
   document.getElementById("btn-logout").addEventListener("click", () => {
-    authHeader = "";
-    lastResult = null;
+    authHeader = ""; lastResult = null;
     document.getElementById("login-overlay").style.display = "flex";
     document.getElementById("inp-pass").value = "";
     document.getElementById("login-error").textContent = "";
   });
 
-  // ── Mappa ──────────────────────────────────────────────────
-  const map = L.map("map").setView([45.35, 9.68], 13);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors", maxZoom: 19
+  // ── Mappa satellite Google ─────────────────────────────────
+  const map = L.map("map").setView([45.35, 9.68], 14);
+
+  L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+    attribution: "© Google",
+    maxZoom: 21,
+    subdomains: ["mt0","mt1","mt2","mt3"]
   }).addTo(map);
 
+  // ── Ricerca indirizzo (Nominatim) ──────────────────────────
+  const searchInput   = document.getElementById("search-input");
+  const searchResults = document.getElementById("search-results");
+
+  async function doSearch() {
+    const q = searchInput.value.trim();
+    if (!q) return;
+    searchResults.style.display = "none";
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`,
+        { headers: { "Accept-Language": "it" } }
+      );
+      const data = await res.json();
+      if (!data.length) {
+        searchResults.innerHTML = `<div class="search-result-item" style="color:#6b7280">Nessun risultato trovato</div>`;
+        searchResults.style.display = "block";
+        return;
+      }
+      searchResults.innerHTML = data.map((r, i) =>
+        `<div class="search-result-item" data-i="${i}" data-lat="${r.lat}" data-lon="${r.lon}">
+          📍 ${r.display_name}
+        </div>`
+      ).join("");
+      searchResults.style.display = "block";
+
+      searchResults.querySelectorAll(".search-result-item[data-lat]").forEach(el => {
+        el.addEventListener("click", () => {
+          const lat = parseFloat(el.dataset.lat);
+          const lon = parseFloat(el.dataset.lon);
+          map.setView([lat, lon], 17);
+          if (searchMarker) map.removeLayer(searchMarker);
+          searchMarker = L.circleMarker([lat, lon], {
+            radius: 8, color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.8
+          }).addTo(map);
+          searchInput.value = el.textContent.trim().replace("📍 ", "");
+          searchResults.style.display = "none";
+        });
+      });
+    } catch {
+      searchResults.innerHTML = `<div class="search-result-item" style="color:#6b7280">Errore di ricerca</div>`;
+      searchResults.style.display = "block";
+    }
+  }
+
+  document.getElementById("btn-search").addEventListener("click", doSearch);
+  searchInput.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+  document.addEventListener("click", e => {
+    if (!document.getElementById("search-bar").contains(e.target) &&
+        !searchResults.contains(e.target)) {
+      searchResults.style.display = "none";
+    }
+  });
+
+  // ── Disegno ────────────────────────────────────────────────
   const drawnItems = new L.FeatureGroup();
   map.addLayer(drawnItems);
 
+  const redLineStyle = { color: "#ef4444", weight: 3 };
+
+  const smallIcon = L.DivIcon.extend({});
   const drawControl = new L.Control.Draw({
     edit: { featureGroup: drawnItems, remove: true },
     draw: {
-      polyline: { shapeOptions: { color: "#3b82f6", weight: 3 } },
+      polyline: {
+        shapeOptions: redLineStyle,
+        icon: new L.DivIcon({
+          iconSize: new L.Point(7, 7),
+          className: "leaflet-div-icon",
+          html: '<div style="width:7px;height:7px;background:#fff;border:2px solid #ef4444;border-radius:50%;"></div>'
+        })
+      },
       polygon: false, rectangle: false, circle: false, circlemarker: false, marker: false
     }
   });
@@ -253,6 +363,7 @@
 
   map.on(L.Draw.Event.CREATED, function(e) {
     drawnItems.clearLayers();
+    e.layer.setStyle(redLineStyle);
     drawnItems.addLayer(e.layer);
     document.getElementById("trace-info").textContent = `Tracciato: ${e.layer.getLatLngs().length} vertici`;
     document.getElementById("btn-check").disabled = false;
@@ -270,12 +381,9 @@
 
   // ── Verifica ───────────────────────────────────────────────
   document.getElementById("btn-check").addEventListener("click", async () => {
-    const nome = document.getElementById("inp-nome").value.trim();
+    const nome    = document.getElementById("inp-nome").value.trim();
     const azienda = document.getElementById("inp-azienda").value.trim();
-    if (!nome || !azienda) {
-      alert("Compila i dati del richiedente (nome e azienda) prima di procedere.");
-      return;
-    }
+    if (!nome || !azienda) { alert("Compila i dati del richiedente prima di procedere."); return; }
 
     const layers = drawnItems.getLayers();
     if (layers.length === 0) return;
@@ -283,9 +391,9 @@
     showLoading();
     document.getElementById("btn-pdf").style.display = "none";
 
-    const latlngs = layers[0].getLatLngs();
+    const latlngs   = layers[0].getLatLngs();
     const coordinates = latlngs.map(ll => [ll.lng, ll.lat]);
-    lastGeojson = {
+    const geojson = {
       type: "FeatureCollection",
       features: [{ type: "Feature", geometry: { type: "LineString", coordinates }, properties: {} }]
     };
@@ -294,16 +402,14 @@
       const res = await fetch(API_BASE + "/check-interference", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": authHeader },
-        body: JSON.stringify({ geojson: lastGeojson })
+        body: JSON.stringify({ geojson })
       });
       if (res.status === 401) { alert("Sessione scaduta, effettua di nuovo il login."); return; }
       if (!res.ok) throw new Error(`Errore server: ${res.status}`);
       lastResult = await res.json();
       showResults(lastResult);
       document.getElementById("btn-pdf").style.display = "block";
-    } catch (err) {
-      showError(err.message);
-    }
+    } catch (err) { showError(err.message); }
   });
 
   document.getElementById("btn-clear").addEventListener("click", () => {
@@ -319,41 +425,33 @@
   function showPlaceholder() {
     document.getElementById("results-area").innerHTML = `
       <div class="result-placeholder"><div class="icon">📐</div>
-      Compila i dati, disegna un tracciato<br/>e avvia la verifica</div>`;
+      Cerca un indirizzo, disegna un tracciato<br/>e avvia la verifica</div>`;
   }
-
   function showLoading() {
     document.getElementById("results-area").innerHTML = `
       <div class="loading"><div class="spinner"></div>Analisi in corso...</div>`;
   }
-
   function showError(msg) {
     document.getElementById("results-area").innerHTML = `
       <div class="status-badge status-err">❌ Errore di connessione</div>
       <div style="font-size:12px;color:#6b7280;padding:8px">${msg}</div>`;
   }
-
   function showResults(result) {
     const isOk = result.status === "non interferente";
     let html = `<div class="status-badge ${isOk ? "status-ok" : "status-err"}">
       ${isOk ? "✅ Nessuna interferenza rilevata" : `❌ ${result.interferenze_count} interferenza/e rilevata/e`}
     </div>`;
-
     if (!isOk && result.interferenze) {
       result.interferenze.forEach(inf => {
         html += `<div class="interference-card">
           <div class="layer-name">${inf.icon} ${inf.layer}</div>
           <div class="detail">
+            <div class="detail-row"><span class="detail-label">Specie rete</span><span class="detail-value">${inf.specie_rete}</span></div>
             <div class="detail-row"><span class="detail-label">Tipo interferenza</span><span class="detail-value">${inf.tipo_interferenza}</span></div>
             <div class="detail-row"><span class="detail-label">Distanza minima</span><span class="detail-value">${inf.distanza_minima_m} m</span></div>
-            <div class="detail-row"><span class="detail-label">Specie rete</span><span class="detail-value">${inf.specie_rete}</span></div>
-            <div class="detail-row"><span class="detail-label">Materiale</span><span class="detail-value">${inf.materiale}</span></div>
-            <div class="detail-row"><span class="detail-label">Diametro</span><span class="detail-value">${inf.diametro}</span></div>
-            ${inf.buffer_applicato_m > 0 ? `<div class="detail-row"><span class="detail-label">Fascia rispetto</span><span class="detail-value">${inf.buffer_applicato_m} m</span></div>` : ""}
           </div>
         </div>`;
       });
-
       if (result.contatti) {
         html += `<div class="contact-card">
           <h3>📞 Contatti per interferenze</h3>
@@ -363,113 +461,110 @@
         </div>`;
       }
     }
-
     document.getElementById("results-area").innerHTML = html;
   }
 
-  // ── PDF ────────────────────────────────────────────────────
-  document.getElementById("btn-pdf").addEventListener("click", () => {
+  // ── PDF con screenshot mappa ───────────────────────────────
+  document.getElementById("btn-pdf").addEventListener("click", async () => {
     if (!lastResult) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const now = new Date().toLocaleString("it-IT");
-    const nome = document.getElementById("inp-nome").value.trim();
-    const azienda = document.getElementById("inp-azienda").value.trim();
-    const isOk = lastResult.status === "non interferente";
+    const btn = document.getElementById("btn-pdf");
+    btn.disabled = true;
+    btn.textContent = "⏳ Generazione in corso...";
 
-    let y = 20;
-    const lm = 20;
-    const pw = 170;
+    let mapImageData = null;
+    try {
+      const canvas = await html2canvas(document.getElementById("map"), { useCORS: true, logging: false });
+      mapImageData = canvas.toDataURL("image/jpeg", 0.85);
+    } catch(e) { console.warn("Screenshot mappa non disponibile:", e); }
+
+    const { jsPDF } = window.jspdf;
+    const doc  = new jsPDF();
+    const now  = new Date().toLocaleString("it-IT");
+    const nome    = document.getElementById("inp-nome").value.trim();
+    const azienda = document.getElementById("inp-azienda").value.trim();
+    const isOk    = lastResult.status === "non interferente";
+    const lm = 20; const pw = 170; let y = 20;
 
     // Intestazione
     doc.setFillColor(26, 29, 39);
-    doc.rect(0, 0, 210, 40, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("CERTIFICATO DI VERIFICA INTERFERENZE", 105, 18, { align: "center" });
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Rete di distribuzione gas - Servizio automatico", 105, 28, { align: "center" });
+    doc.rect(0, 0, 210, 42, "F");
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(15); doc.setFont("helvetica","bold");
+    doc.text("CERTIFICATO DI VERIFICA INTERFERENZE", 105, 17, { align:"center" });
+    doc.setFontSize(9); doc.setFont("helvetica","normal");
+    doc.text("Rete di distribuzione gas — Servizio automatico", 105, 26, { align:"center" });
+    doc.setFontSize(8); doc.setTextColor(160,160,160);
+    doc.text(`Generato il ${now}`, 105, 34, { align:"center" });
     y = 52;
 
-    // Dati richiedente
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("DATI RICHIEDENTE", lm, y); y += 8;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Nome e cognome: ${nome}`, lm, y); y += 6;
-    doc.text(`Azienda / Ente: ${azienda}`, lm, y); y += 6;
-    doc.text(`Data e ora verifica: ${now}`, lm, y); y += 12;
+    // Richiedente
+    doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
+    doc.text("DATI RICHIEDENTE", lm, y); y += 7;
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    doc.text(`Nome e cognome: ${nome}`, lm, y); y += 5;
+    doc.text(`Azienda / Ente:  ${azienda}`, lm, y); y += 12;
 
     // Esito
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    if (isOk) {
-      doc.setFillColor(5, 46, 22);
-      doc.setTextColor(74, 222, 128);
-    } else {
-      doc.setFillColor(45, 10, 10);
-      doc.setTextColor(248, 113, 113);
-    }
-    doc.roundedRect(lm, y, pw, 14, 3, 3, "F");
-    doc.text(isOk ? "✓  NESSUNA INTERFERENZA RILEVATA" : `✗  ${lastResult.interferenze_count} INTERFERENZA/E RILEVATA/E`, 105, y + 9, { align: "center" });
-    y += 22;
+    doc.setFontSize(12); doc.setFont("helvetica","bold");
+    if (isOk) { doc.setFillColor(5,46,22); doc.setTextColor(74,222,128); }
+    else       { doc.setFillColor(45,10,10); doc.setTextColor(248,113,113); }
+    doc.roundedRect(lm, y, pw, 13, 3, 3, "F");
+    doc.text(
+      isOk ? "✓  NESSUNA INTERFERENZA RILEVATA" : `✗  ${lastResult.interferenze_count} INTERFERENZA/E RILEVATA/E`,
+      105, y + 8.5, { align:"center" }
+    );
+    y += 18;
 
-    // Dettaglio interferenze
+    // Dettaglio
     if (!isOk && lastResult.interferenze) {
-      doc.setTextColor(30, 30, 30);
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("DETTAGLIO INTERFERENZE", lm, y); y += 8;
+      doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
+      doc.text("DETTAGLIO INTERFERENZE", lm, y); y += 7;
 
       lastResult.interferenze.forEach((inf, i) => {
-        doc.setFillColor(245, 245, 250);
-        doc.rect(lm, y, pw, 38, "F");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(220, 38, 38);
-        doc.text(`${i + 1}. ${inf.layer}`, lm + 4, y + 7);
-        doc.setTextColor(50, 50, 50);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.text(`Tipo interferenza: ${inf.tipo_interferenza}`, lm + 4, y + 14);
-        doc.text(`Distanza minima: ${inf.distanza_minima_m} m`, lm + 4, y + 20);
-        doc.text(`Specie rete: ${inf.specie_rete}   |   Materiale: ${inf.materiale}   |   Diametro: ${inf.diametro}`, lm + 4, y + 26);
-        if (inf.buffer_applicato_m > 0) {
-          doc.text(`Fascia di rispetto applicata: ${inf.buffer_applicato_m} m`, lm + 4, y + 32);
-        }
-        y += 42;
+        const cardH = 46;
+        doc.setFillColor(248,248,252); doc.rect(lm, y, pw, cardH, "F");
+        doc.setDrawColor(239,68,68); doc.setLineWidth(0.8);
+        doc.line(lm, y, lm, y + cardH); doc.setLineWidth(0.2);
+        doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(220,38,38);
+        doc.text(`${i+1}. ${inf.layer} — ${inf.tipo_interferenza}`, lm+5, y+7);
+        doc.setTextColor(50,50,50); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+        doc.text(`ID: ${inf.id}`, lm+5, y+14);
+        doc.text(`Comune (area): ${inf.area_code}`, lm+5, y+20);
+        doc.text(`Specie rete: ${inf.specie_rete}`, lm+5, y+26);
+        doc.text(`Materiale: ${inf.materiale}   |   Diametro: ${inf.diametro}   |   Lunghezza: ${inf.lunghezza} m`, lm+5, y+32);
+        doc.text(`Distanza minima dal tracciato: ${inf.distanza_minima_m} m`, lm+5, y+40);
+        y += cardH + 4;
       });
 
-      // Contatti
       if (lastResult.contatti) {
-        y += 4;
-        doc.setFillColor(237, 233, 254);
-        doc.rect(lm, y, pw, 28, "F");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(109, 40, 217);
-        doc.text("CONTATTI PER INTERFERENZE", lm + 4, y + 8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(50, 50, 50);
-        doc.setFontSize(9);
-        doc.text(`Azienda: ${lastResult.contatti.azienda}`, lm + 4, y + 15);
-        doc.text(`Email: ${lastResult.contatti.email}   |   Tel: ${lastResult.contatti.telefono}`, lm + 4, y + 21);
-        y += 32;
+        y += 2;
+        doc.setFillColor(237,233,254); doc.rect(lm, y, pw, 26, "F");
+        doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(109,40,217);
+        doc.text("CONTATTI PER INTERFERENZE", lm+5, y+7);
+        doc.setFont("helvetica","normal"); doc.setTextColor(50,50,50); doc.setFontSize(8.5);
+        doc.text(`Responsabile: ${lastResult.contatti.azienda}`, lm+5, y+14);
+        doc.text(`Email: ${lastResult.contatti.email}   |   Tel: ${lastResult.contatti.telefono}`, lm+5, y+21);
+        y += 30;
       }
     }
 
-    // Footer
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.setFont("helvetica", "italic");
-    doc.text("Documento generato automaticamente dal sistema di verifica interferenze. Non sostituisce una verifica tecnica in campo.", 105, 285, { align: "center" });
+    // Screenshot mappa
+    if (mapImageData) {
+      if (y > 215) { doc.addPage(); y = 20; }
+      doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont("helvetica","bold");
+      doc.text("MAPPA DEL TRACCIATO", lm, y); y += 5;
+      const imgW = pw; const imgH = imgW * 0.56;
+      doc.addImage(mapImageData, "JPEG", lm, y, imgW, imgH);
+      y += imgH + 5;
+    }
 
-    const filename = `verifica_interferenze_${now.replace(/[/:, ]/g, "_")}.pdf`;
-    doc.save(filename);
+    // Footer
+    doc.setFontSize(7.5); doc.setTextColor(150); doc.setFont("helvetica","italic");
+    doc.text("Documento generato automaticamente. Non sostituisce una verifica tecnica in campo.", 105, 290, { align:"center" });
+
+    doc.save(`verifica_${now.replace(/[/:, ]/g,"_")}.pdf`);
+    btn.disabled = false;
+    btn.textContent = "📄 Scarica certificato PDF";
   });
 </script>
 </body>
