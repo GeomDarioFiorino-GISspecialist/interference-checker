@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "nome": "Fascia rispetto acquedotto", "tipo": "acquedotto", "buffer_m": 30 },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [9.66, 45.34], [9.70, 45.34], [9.70, 45.37], [9.66, 45.37], [9.66, 45.34]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nome": "Vincolo ambientale", "tipo": "ambientale", "buffer_m": 0 },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [9.72, 45.35], [9.76, 45.35], [9.76, 45.39], [9.72, 45.39], [9.72, 45.35]
+        ]]
+      }
+    }
+  ]
+}

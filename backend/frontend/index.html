@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verifica Interferenze</title>
+
+  <!-- MapLibre GL JS -->
+  <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+
+  <!-- MapLibre GL Draw -->
+  <link href="https://unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1a1d27;
+      border-bottom: 1px solid #2a2d3e;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    header span {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    /* ── Layout ── */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 320px;
+      background: #1a1d27;
+      border-right: 1px solid #2a2d3e;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid #2a2d3e;
+    }
+
+    .sidebar-section h2 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .instructions {
+      font-size: 13px;
+      color: #9ca3af;
+      line-height: 1.6;
+    }
+
+    .instructions li {
+      margin-bottom: 6px;
+      padding-left: 4px;
+    }
+
+    .instructions li::marker {
+      color: #3b82f6;
+    }
+
+    /* ── Bottone ── */
+    #btn-check {
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #btn-check:hover { background: #2563eb; }
+    #btn-check:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
+
+    #btn-clear {
+      width: 100%;
+      padding: 8px;
+      background: transparent;
+      color: #6b7280;
+      border: 1px solid #2a2d3e;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    #btn-clear:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* ── Risultati ── */
+    .results-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .result-placeholder {
+      text-align: center;
+      color: #374151;
+      font-size: 13px;
+      padding: 40px 0;
+    }
+
+    .result-placeholder .icon { font-size: 36px; margin-bottom: 10px; }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .status-ok {
+      background: #052e16;
+      border: 1px solid #16a34a;
+      color: #4ade80;
+    }
+
+    .status-err {
+      background: #2d0a0a;
+      border: 1px solid #dc2626;
+      color: #f87171;
+    }
+
+    .interference-card {
+      background: #12151f;
+      border: 1px solid #2a2d3e;
+      border-left: 3px solid #ef4444;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+
+    .interference-card .layer-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f3f4f6;
+      margin-bottom: 4px;
+    }
+
+    .interference-card .detail {
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .detail-label { color: #6b7280; }
+    .detail-value { color: #d1d5db; }
+
+    /* ── Loading ── */
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #2a2d3e;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mappa ── */
+    #map {
+      flex: 1;
+    }
+
+    /* ── Info tracciato ── */
+    #trace-info {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🗺️ Verifica Interferenze</h1>
+  <span>I layer di riferimento sono protetti e non visibili</span>
+</header>
+
+<div class="app-body">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <h2>Istruzioni</h2>
+      <ol class="instructions">
+        <li>Usa lo strumento linea sulla mappa per disegnare il tracciato dell'opera</li>
+        <li>Clicca ogni punto del percorso, doppio clic per terminare</li>
+        <li>Premi <strong>Verifica interferenze</strong></li>
+      </ol>
+    </div>
+
+    <div class="sidebar-section">
+      <h2>Azione</h2>
+      <div id="trace-info">Nessun tracciato disegnato</div>
+      <br/>
+      <button id="btn-check" disabled>Verifica interferenze</button>
+      <button id="btn-clear">Cancella tracciato</button>
+    </div>
+
+    <div class="results-area" id="results-area">
+      <div class="result-placeholder">
+        <div class="icon">📐</div>
+        Disegna un tracciato sulla mappa<br/>e avvia la verifica
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mappa -->
+  <div id="map"></div>
+
+</div>
+
+<script>
+  // ─── Configurazione ───────────────────────────────
+  // ⚠️  Cambia questo URL con quello del tuo backend deployato
+  const API_URL = "http://localhost:8000/check-interference";
+
+  // ─── Inizializza mappa ────────────────────────────
+  const map = new maplibregl.Map({
+    container: "map",
+    style: {
+      version: 8,
+      sources: {
+        "osm": {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "© OpenStreetMap contributors"
+        }
+      },
+      layers: [{
+        id: "osm-layer",
+        type: "raster",
+        source: "osm",
+        minzoom: 0,
+        maxzoom: 22
+      }]
+    },
+    center: [9.68, 45.35],  // ← Cambia con il centro della tua area
+    zoom: 12
+  });
+
+  map.addControl(new maplibregl.NavigationControl(), "top-right");
+  map.addControl(new maplibregl.ScaleControl(), "bottom-right");
+
+  // ─── Inizializza Draw ────────────────────────────
+  const draw = new MapboxDraw({
+    displayControlsDefault: false,
+    controls: {
+      line_string: true,
+      trash: true
+    },
+    styles: [
+      {
+        id: "gl-draw-line",
+        type: "line",
+        filter: ["all", ["==", "$type", "LineString"], ["!=", "mode", "static"]],
+        paint: {
+          "line-color": "#3b82f6",
+          "line-width": 3,
+          "line-dasharray": [0, 2]
+        }
+      },
+      {
+        id: "gl-draw-line-static",
+        type: "line",
+        filter: ["all", ["==", "$type", "LineString"], ["==", "mode", "static"]],
+        paint: {
+          "line-color": "#3b82f6",
+          "line-width": 3
+        }
+      },
+      {
+        id: "gl-draw-vertex",
+        type: "circle",
+        filter: ["all", ["==", "$type", "Point"], ["==", "meta", "vertex"]],
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "#fff",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#3b82f6"
+        }
+      }
+    ]
+  });
+
+  map.addControl(draw, "top-left");
+
+  // ─── Stato ────────────────────────────────────────
+  let currentFeatureId = null;
+
+  // Aggiorna UI quando si disegna
+  map.on("draw.create", onDrawChange);
+  map.on("draw.update", onDrawChange);
+  map.on("draw.delete", onDrawDelete);
+
+  function onDrawChange(e) {
+    const data = draw.getAll();
+    const lines = data.features.filter(f => f.geometry.type === "LineString");
+    if (lines.length > 0) {
+      const coords = lines[0].geometry.coordinates;
+      document.getElementById("btn-check").disabled = false;
+      document.getElementById("trace-info").textContent =
+        `Tracciato: ${coords.length} vertici`;
+    }
+  }
+
+  function onDrawDelete() {
+    document.getElementById("btn-check").disabled = true;
+    document.getElementById("trace-info").textContent = "Nessun tracciato disegnato";
+    showPlaceholder();
+  }
+
+  // ─── Verifica interferenze ────────────────────────
+  document.getElementById("btn-check").addEventListener("click", async () => {
+    const data = draw.getAll();
+    const lines = data.features.filter(f => f.geometry.type === "LineString");
+
+    if (lines.length === 0) return;
+
+    // Mostra loading
+    showLoading();
+
+    const geojson = {
+      type: "FeatureCollection",
+      features: [lines[0]]
+    };
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ geojson })
+      });
+
+      if (!res.ok) throw new Error(`Errore server: ${res.status}`);
+
+      const result = await res.json();
+      showResults(result);
+
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
+  // ─── Cancella tracciato ───────────────────────────
+  document.getElementById("btn-clear").addEventListener("click", () => {
+    draw.deleteAll();
+    document.getElementById("btn-check").disabled = true;
+    document.getElementById("trace-info").textContent = "Nessun tracciato disegnato";
+    showPlaceholder();
+  });
+
+  // ─── UI helpers ──────────────────────────────────
+  function showPlaceholder() {
+    document.getElementById("results-area").innerHTML = `
+      <div class="result-placeholder">
+        <div class="icon">📐</div>
+        Disegna un tracciato sulla mappa<br/>e avvia la verifica
+      </div>`;
+  }
+
+  function showLoading() {
+    document.getElementById("results-area").innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        Analisi in corso...
+      </div>`;
+  }
+
+  function showError(msg) {
+    document.getElementById("results-area").innerHTML = `
+      <div class="status-badge status-err">
+        ❌ Errore di connessione
+      </div>
+      <div style="font-size:12px;color:#6b7280;padding:8px">${msg}</div>
+      <div style="font-size:12px;color:#6b7280;padding:8px">
+        Verifica che il backend sia in esecuzione su <code>${API_URL}</code>
+      </div>`;
+  }
+
+  function showResults(result) {
+    const area = document.getElementById("results-area");
+    const isOk = result.status === "non interferente";
+
+    let html = `
+      <div class="status-badge ${isOk ? "status-ok" : "status-err"}">
+        ${isOk ? "✅" : "❌"}
+        ${isOk ? "Nessuna interferenza rilevata" : `${result.interferenze_count} interferenz${result.interferenze_count > 1 ? "e" : "a"} rilevat${result.interferenze_count > 1 ? "e" : "a"}`}
+      </div>`;
+
+    if (!isOk && result.interferenze) {
+      result.interferenze.forEach(inf => {
+        html += `
+          <div class="interference-card">
+            <div class="layer-name">${inf.icon} ${inf.layer}</div>
+            <div class="detail">
+              <div class="detail-row">
+                <span class="detail-label">Elemento</span>
+                <span class="detail-value">${inf.nome}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Tipo</span>
+                <span class="detail-value">${inf.tipo_interferenza}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Distanza minima</span>
+                <span class="detail-value">${inf.distanza_minima_m} m</span>
+              </div>
+              ${inf.buffer_applicato_m > 0 ? `
+              <div class="detail-row">
+                <span class="detail-label">Buffer rispetto</span>
+                <span class="detail-value">${inf.buffer_applicato_m} m</span>
+              </div>` : ""}
+            </div>
+          </div>`;
+      });
+    }
+
+    area.innerHTML = html;
+  }
+</script>
+</body>
+</html>
