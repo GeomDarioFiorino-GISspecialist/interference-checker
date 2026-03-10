@@ -1,11 +1,9 @@
 import os
 import secrets
-import smtplib
 import base64
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
+import urllib.request
+import urllib.error
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -18,7 +16,7 @@ from pydantic import BaseModel
 from shapely.geometry import shape
 from shapely.ops import transform
 
-app = FastAPI(title="Interference Checker API", version="3.1.0")
+app = FastAPI(title="Interference Checker API", version="3.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,9 +41,8 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
-# ─── Email ────────────────────────────────────────────────────
-GMAIL_USER     = "dario98frn@gmail.com"
-GMAIL_APP_PASS = os.environ.get("GMAIL_APP_PASS", "")
+# ─── Email (Resend) ───────────────────────────────────────────
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 NOTIFY_TO      = "dario98frn@gmail.com"
 CONTACT_EMAIL  = "dario98frn@gmail.com"
 CONTACT_PHONE  = "+39 389 389 3893"
@@ -95,27 +92,21 @@ def gf(feature, name):
     except Exception:
         return "N/D"
 
-# ─── Email ────────────────────────────────────────────────────
+# ─── Invio email via Resend ───────────────────────────────────
 def send_email(nome, azienda, esito, interferenze, now, pdf_b64=None):
     try:
-        msg = MIMEMultipart()
-        msg["From"]    = GMAIL_USER
-        msg["To"]      = NOTIFY_TO
-        msg["Subject"] = f"[Verifica Interferenze] {esito.upper()} — {nome} ({now})"
-
         righe = ""
         if interferenze:
             for i, inf in enumerate(interferenze, 1):
                 righe += (
                     f"\n  {i}. {inf.get('layer','')} — {inf.get('tipo_interferenza','')}"
-                    f"\n     ID: {inf.get('id','')} | Comune: {inf.get('area_code','')}"
-                    f"\n     Specie: {inf.get('specie_rete','')} | Materiale: {inf.get('materiale','')} | Diametro: {inf.get('diametro','')}"
+                    f"\n     Specie: {inf.get('specie_rete','')} | Materiale: {inf.get('materiale','')} | Lunghezza: {inf.get('lunghezza','')} m"
                     f"\n     Distanza minima: {inf.get('distanza_minima_m','')} m\n"
                 )
         else:
             righe = "\n  Nessuna interferenza rilevata.\n"
 
-        corpo = (
+        testo = (
             "Nuova verifica interferenze ricevuta.\n\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             "RICHIEDENTE\n"
@@ -130,21 +121,35 @@ def send_email(nome, azienda, esito, interferenze, now, pdf_b64=None):
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             "Messaggio generato automaticamente."
         )
-        msg.attach(MIMEText(corpo, "plain"))
 
+        payload = {
+            "from": "onboarding@resend.dev",
+            "to": [NOTIFY_TO],
+            "subject": f"[Verifica Interferenze] {esito.upper()} — {nome} ({now})",
+            "text": testo,
+        }
+
+        # Allega PDF se presente
         if pdf_b64:
-            pdf_bytes = base64.b64decode(pdf_b64)
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(pdf_bytes)
-            encoders.encode_base64(part)
             fname = f"verifica_{nome.replace(' ','_')}.pdf"
-            part.add_header("Content-Disposition", f"attachment; filename={fname}")
-            msg.attach(part)
+            payload["attachments"] = [{
+                "filename": fname,
+                "content": pdf_b64,
+            }]
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(GMAIL_USER, GMAIL_APP_PASS)
-            server.sendmail(GMAIL_USER, NOTIFY_TO, msg.as_string())
-        print(f"Email inviata per {nome} — {esito}")
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=data,
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            print(f"Email inviata per {nome} — {esito} | id: {result.get('id')}")
     except Exception as e:
         print(f"Errore invio email: {e}")
 
@@ -180,11 +185,11 @@ def debug_fields(username: str = Depends(verify_credentials)):
 
 @app.get("/debug-email")
 def debug_email(username: str = Depends(verify_credentials)):
-    app_pass = os.environ.get("GMAIL_APP_PASS", "NON TROVATA")
+    api_key = os.environ.get("RESEND_API_KEY", "NON TROVATA")
     send_email("Test", "Test Azienda", "test", [], "test", None)
     return {
-        "gmail_pass_trovata": app_pass != "NON TROVATA",
-        "gmail_pass_lunghezza": len(app_pass)
+        "resend_key_trovata": api_key != "NON TROVATA",
+        "resend_key_lunghezza": len(api_key)
     }
 
 @app.post("/check-interference")
